@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "813003000228",
+    "project_id": "hatihati-22fa9",
+    "storage_bucket": "hatihati-22fa9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:813003000228:android:3a9e41a9dd3df8fa801931",
+        "android_client_info": {
+          "package_name": "com.dicoding.picodiploma.ha"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "813003000228-44n4blkjdonm0lf8c9d296pt4a3jjvgv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dicoding.picodiploma.ha",
+            "certificate_hash": "f83ae8018c2593712714279fafe61c7218e16676"
+          }
+        },
+        {
+          "client_id": "813003000228-nucj02nk8g552bqlaakp3ctmmvfjvov0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoFz15arweZtwRqvjJhlknilZxhbNdXkk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "813003000228-nucj02nk8g552bqlaakp3ctmmvfjvov0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
