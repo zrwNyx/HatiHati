@@ -19,9 +19,7 @@
         <activity
             android:name=".AddLocationActivity"
             android:exported="false" />
-        <activity
-            android:name=".test.FirebaseMLTestActivity"
-            android:exported="false" />
+
         <activity
             android:name=".Auth.SignUp"
             android:exported="false" />

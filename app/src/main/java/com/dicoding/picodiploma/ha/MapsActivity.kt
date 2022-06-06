@@ -13,6 +13,7 @@ import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -23,6 +24,7 @@ import com.dicoding.picodiploma.ha.Auth.SignIn
 import com.dicoding.picodiploma.ha.Model.Report
 import com.dicoding.picodiploma.ha.databinding.ActivityMapsBinding
 import com.dicoding.picodiploma.ha.test.MapsActivity2
+import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -30,6 +32,12 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
 import com.google.firebase.ml.modeldownloader.DownloadType
@@ -51,12 +59,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var binding: ActivityMapsBinding
     private lateinit var database : DatabaseReference
     private lateinit var reportArrayList : ArrayList<Report>
-    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var firebaseAuth : FirebaseAuth
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
+    private lateinit var placesClient: PlacesClient
     private lateinit var geocoder : Geocoder
     private var check = 0
     private lateinit var interpreter: Interpreter
+    private val apiKey ="AIzaSyA0L5HH6pok52kuy9NNJZVGM0vKb7VG0Zg"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,8 +79,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(applicationContext)
 
+        if(!Places.isInitialized()){
+            Places.initialize(applicationContext,apiKey)
+        }
 
-        //buka kalo buat test test doang
+        placesClient = Places.createClient(this)
+        val autoCompleteFragment = supportFragmentManager.findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment?
+
+        autoCompleteFragment?.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG))
+        autoCompleteFragment?.view?.setBackgroundColor(Color.WHITE)
+        autoCompleteFragment?.setHint("Cari Tempat")
+        autoCompleteFragment?.setOnPlaceSelectedListener(object  : PlaceSelectionListener {
+            override fun onPlaceSelected(place: Place) {
+                Log.i("Searched Place", "Place: ${place.latLng?.latitude.toString()}  ${place.latLng?.longitude.toString()}")
+                val move = place.latLng
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(move,15.0f))
+
+            }
+
+            override fun onError(p0: Status) {
+                Log.i("Error", "An error occured : + ${p0.status}")
+            }
+        })
+
+
        binding.add.setOnClickListener{
             val test = Intent(applicationContext, AddReportActivity::class.java)
             startActivity(test)
@@ -136,7 +168,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 return true
             }
             R.id.logout->{
-                clearLog()
+                firebaseAuth = FirebaseAuth.getInstance()
+                firebaseAuth.signOut()
+                val logIntent = Intent(this, SignIn::class.java)
+                logIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                this.startActivity(logIntent)
+
             }
             else -> {
                 return super.onOptionsItemSelected(item)
@@ -247,21 +284,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    //buat logout dah pokoknya
-    private fun clearLog(){
-        sharedPreferences = getSharedPreferences("LOGIN", Context.MODE_PRIVATE)
-        val editor : SharedPreferences.Editor = sharedPreferences.edit()
-
-        editor.apply{
-            putString("Email", null)
-            putString("Password", null)
-        }.apply()
-
-        val logIntent = Intent(this, SignIn::class.java)
-        logIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        this.startActivity(logIntent)
-
-    }
 
     //pas awal awal munculin lokasi lo skrg
     private fun setUpCurrentLocation(){

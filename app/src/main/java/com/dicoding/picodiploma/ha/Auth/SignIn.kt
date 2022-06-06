@@ -14,15 +14,12 @@ class SignIn : AppCompatActivity() {
 
     private lateinit var binding : ActivitySignInBinding
     private lateinit var firebaseAuth : FirebaseAuth
-    lateinit var sharedPreferences : SharedPreferences
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySignInBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
 
-        sharedPreferences = getSharedPreferences("LOGIN", Context.MODE_PRIVATE)
-        val editor : SharedPreferences.Editor = sharedPreferences.edit()
         binding.btnSignup.setOnClickListener{
             val startSignUp = Intent(this, SignUp::class.java)
             startActivity(startSignUp)
@@ -38,23 +35,21 @@ class SignIn : AppCompatActivity() {
                     val startMap = Intent(this, MapsActivity::class.java)
                     startActivity(startMap)
                     Toast.makeText(applicationContext, "User Berhasil Login", Toast.LENGTH_SHORT).show()
-                    editor.putString("Email", email)
-                    editor.putString("Password", password)
-                    editor.apply()
                 }else{
                     Toast.makeText(applicationContext,"User Tidak Terdaftar", Toast.LENGTH_SHORT).show()
                 }
             }
         }
-        val check = sharedPreferences.getString("Email", null)
-        val checkPass = sharedPreferences.getString("Password", null)
-         if(check == null && checkPass == null) {
-             Toast.makeText(applicationContext, "Silahkan Login", Toast.LENGTH_LONG).show()
-         }else{
-           //firebaseAuth.signInWithEmailAndPassword(check, checkPass)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if(currentUser != null){
             val startMap = Intent(this, MapsActivity::class.java)
             startActivity(startMap)
             finish()
+
         }
     }
 }

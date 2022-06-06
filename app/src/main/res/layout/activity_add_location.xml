@@ -32,11 +32,11 @@
         android:layout_width="33dp"
         android:layout_height="39dp"
         android:src="@drawable/ic_baseline_place_24"
-        android:tint="@color/red"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/map" />
+        app:layout_constraintTop_toTopOf="@+id/map"
+        app:tint="@color/red" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/myloc"
