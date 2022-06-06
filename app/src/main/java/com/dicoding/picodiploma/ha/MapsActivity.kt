@@ -15,11 +15,10 @@ import android.location.Location
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.dicoding.picodiploma.ha.Auth.SignIn
 import com.dicoding.picodiploma.ha.Model.Report
 import com.dicoding.picodiploma.ha.databinding.ActivityMapsBinding
@@ -32,9 +31,17 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.database.*
+import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
+import com.google.firebase.ml.modeldownloader.DownloadType
+import com.google.firebase.ml.modeldownloader.FirebaseModelDownloader
 import com.google.maps.android.SphericalUtil
+import org.tensorflow.lite.Interpreter
 import java.io.IOException
 import java.lang.StringBuilder
+import java.math.RoundingMode
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.text.DecimalFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -49,6 +56,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var lastLocation: Location
     private lateinit var geocoder : Geocoder
     private var check = 0
+    private lateinit var interpreter: Interpreter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,13 +77,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
 
+        val conditions = CustomModelDownloadConditions.Builder().build()
+        FirebaseModelDownloader.getInstance().getModel("Prediction", DownloadType.LOCAL_MODEL,conditions)
+            .addOnSuccessListener {
+                val modelFile = it.file
+                if(modelFile != null){
+                    Toast.makeText(applicationContext,"Model Downloaded", Toast.LENGTH_SHORT).show()
+                    interpreter = Interpreter(modelFile)
+                }
+            }
+
     }
 
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        //val Jakarta = LatLng(-6.200000,106.816666)
-        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Jakarta,14.0f))
         setUpCurrentLocation()
         mMap.uiSettings.isZoomControlsEnabled = true
         supportActionBar?.setDisplayShowHomeEnabled(true)
@@ -105,6 +121,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
+
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater =menuInflater
         inflater.inflate(R.menu.navigation_menu, menu)
@@ -130,13 +148,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     //buat munculin marker nya pas diklik ngab
+    @SuppressLint("SetTextI18n")
     private fun markerClicked(){
         mMap.setOnMapClickListener {
             mMap.clear()
             check = 0
             val circPos = LatLng(it.latitude, it.longitude)
-            createCircle(it.latitude,it.longitude)
+            val Lokasi = getLocationName(it.latitude,it.longitude)
+            val currentTime = "${Calendar.getInstance().time.hours}:${Calendar.getInstance().time.minutes}"
+            val jam = Calendar.getInstance().time.hours
+            val prediksi = getPrediction(jam.toFloat(), it.longitude.toFloat(), it.latitude.toFloat())
+            createCircle(it.latitude,it.longitude, prediksi)
             showFilteredMarker(circPos)
+            binding.rectText.text = "\n" +
+                    "     Lokasi : $Lokasi   \n" +
+                    "     Jam : $currentTime  \n" +
+                    "     Prediksi : $prediksi % \n"
             if(check == 0){
                 Toast.makeText(applicationContext,"Tidak ada Data di Area Sekitar",Toast.LENGTH_SHORT).show()
             }
@@ -166,35 +193,56 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-
-    //buat bikin marker yang diklik
-    @SuppressLint("SetTextI18n")
-    private fun createMarker(Jam : String, Lokasi : String) : Bitmap{
-        val markerLayout: View = layoutInflater.inflate(R.layout.clicked_marker_layout,null)
-        val markerText : TextView = markerLayout.findViewById(R.id.marker_text)
-        markerText.setText("Lokasi = $Lokasi \n" +
-                "Jam = $Jam \n" +
-                "Prediksi = null")
-
-        markerLayout.measure(View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED))
-        markerLayout.layout(0,0,markerLayout.measuredWidth,markerLayout.measuredHeight)
-
-        val bitmap : Bitmap = Bitmap.createBitmap(markerLayout.measuredWidth,markerLayout.measuredHeight,Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        markerLayout.draw(canvas)
-        return bitmap
-    }
-
-
     //buat bikin circle kalo di klik
     @Suppress("DEPRECATION")
-    private fun createCircle(x : Double, y :Double) {
+    private fun createCircle(x : Double, y :Double, Prediksi : Float) {
         val circPos = LatLng(x,y)
-        val Lokasi = getLocationName(x,y)
-        val currentTime = "${Calendar.getInstance().time.hours}:${Calendar.getInstance().time.minutes}"
-        mMap.addMarker(MarkerOptions().position(circPos).icon(BitmapDescriptorFactory.fromBitmap(createMarker(currentTime,Lokasi))))
+        val red : Int
+        val green : Int
+        val blue : Int
+        mMap.addMarker(MarkerOptions().position(circPos).icon(BitmapDescriptorFromVector(applicationContext,R.drawable.ic_baseline_place_24)))
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(circPos,15.0f))
-        val circle =CircleOptions().center(circPos).radius(1000.0).strokeColor(Color.rgb(255,0,0)).fillColor(Color.argb(20,255,0,0))
+
+       when{
+            Prediksi < 10 ->{
+                red = 22;green =84;blue =0
+            }
+            Prediksi > 10 && Prediksi < 20 ->{
+                red =38;green = 147;blue = 0
+            }
+            Prediksi > 20 && Prediksi < 30 ->{
+                red =94;green = 195;blue = 58
+            }
+            Prediksi > 30 && Prediksi < 40 ->{
+                red =163;green = 197;blue = 46
+
+            }
+            Prediksi > 40 && Prediksi < 50 ->{
+                red =214;green = 207;blue = 13
+            }
+            Prediksi > 50 && Prediksi < 60 ->{
+                red =196;green = 167;blue = 46
+            }
+            Prediksi > 60 && Prediksi < 70 ->{
+                red =196;green = 134;blue = 14
+            }
+            Prediksi > 70 && Prediksi < 80 ->{
+                red =178;green = 100;blue = 7
+            }
+            Prediksi > 80 && Prediksi < 90 ->{
+                red =178;green = 35;blue = 7
+            }
+            Prediksi > 90 && Prediksi < 100 ->{
+                red =148;green = 39;blue = 6
+            }else->{
+                red =0;green =0;blue =0
+            }
+        }
+
+
+
+
+        val circle =CircleOptions().center(circPos).radius(1000.0).strokeColor(Color.TRANSPARENT).fillColor(Color.argb(40,red,green,blue))
         mMap.addCircle(circle)
     }
 
@@ -266,6 +314,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         return lokasi
+
+    }
+
+    private fun BitmapDescriptorFromVector(context : Context, vectorResId : Int) : BitmapDescriptor{
+        val vectorDrawable = ContextCompat.getDrawable(context,vectorResId)
+        vectorDrawable?.setBounds(0,0,vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight)
+        val bitmap = Bitmap.createBitmap(vectorDrawable!!.intrinsicWidth,vectorDrawable!!.intrinsicHeight,Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        vectorDrawable!!.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+    private fun getPrediction(Jam : Float , Lon: Float, Lat: Float) : Float{
+
+        var predict = 0.0f
+        val input = ByteBuffer.allocateDirect(3*4).order(ByteOrder.nativeOrder())
+        input.putFloat(Jam)
+        input.putFloat(Lon)
+        input.putFloat(Lat)
+
+        val bufferSize = 4 * java.lang.Float.SIZE / java.lang.Byte.SIZE
+        val modelOutput = ByteBuffer.allocate(bufferSize).order(ByteOrder.nativeOrder())
+        val actualOutput = modelOutput.asFloatBuffer()
+
+        interpreter.run(input,modelOutput)
+        modelOutput.rewind()
+        val b = actualOutput.get(1)*100
+        val df = DecimalFormat("#.##")
+        df.roundingMode = RoundingMode.DOWN
+        predict = df.format(b).toFloat()
+
+        return predict
 
     }
 

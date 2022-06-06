@@ -3,8 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/ha/app/src/main/res/drawable/back.xml" value="0.2665" />
         <entry key="..\:/ha/app/src/main/res/drawable/d.xml" value="0.1" />
         <entry key="..\:/ha/app/src/main/res/drawable/ic_baseline_arrow_downward_24.xml" value="0.106" />
+        <entry key="..\:/ha/app/src/main/res/drawable/ic_baseline_place_24.xml" value="0.2665" />
         <entry key="..\:/ha/app/src/main/res/drawable/ic_launcher_background.xml" value="0.174" />
         <entry key="..\:/ha/app/src/main/res/drawable/textbackground.xml" value="0.182" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_add_location.xml" value="0.33" />
@@ -12,7 +14,7 @@
         <entry key="..\:/ha/app/src/main/res/layout/activity_chat.xml" value="0.35104166666666664" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_firebase_mltest.xml" value="0.31979166666666664" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_main.xml" value="0.36666666666666664" />
-        <entry key="..\:/ha/app/src/main/res/layout/activity_maps.xml" value="0.1" />
+        <entry key="..\:/ha/app/src/main/res/layout/activity_maps.xml" value="0.33" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_maps2.xml" value="0.2828125" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_sign_in.xml" value="0.25" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_sign_up.xml" value="0.265625" />

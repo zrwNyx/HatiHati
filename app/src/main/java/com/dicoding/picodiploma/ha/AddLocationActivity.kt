@@ -5,20 +5,18 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.dicoding.picodiploma.ha.databinding.ActivityAddLocationBinding
-import com.dicoding.picodiploma.ha.databinding.ActivityFirebaseMltestBinding
-import com.dicoding.picodiploma.ha.test.MapsActivity2
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.*
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
@@ -84,14 +82,6 @@ class AddLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
         setUpMap()
         mMap.uiSettings.isMyLocationButtonEnabled = false
-
-        /*mMap.setOnMapClickListener(GoogleMap.OnMapClickListener {
-            val intent = Intent(applicationContext, AddReportActivity::class.java)
-            intent.putExtra("LAT", it.latitude)
-            intent.putExtra("LON", it.longitude)
-            startActivity(intent)
-            finish()
-        })*/
 
         mMap.setOnCameraIdleListener {
             lat = mMap.cameraPosition.target.latitude
