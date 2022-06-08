@@ -56,7 +56,7 @@
             android:exported="false"
             android:label="@string/title_activity_maps" />
         <activity
-            android:name=".ChatActivity"
+            android:name=".ChatBot.ChatActivity"
             android:exported="false"
             android:label="@string/ChatActivity" />
     </application>

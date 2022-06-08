@@ -20,12 +20,14 @@ class SignIn : AppCompatActivity() {
         setContentView(binding.root)
         supportActionBar?.hide()
 
+        firebaseAuth = FirebaseAuth.getInstance()
+        val user = firebaseAuth.currentUser
+
         binding.btnSignup.setOnClickListener{
             val startSignUp = Intent(this, SignUp::class.java)
             startActivity(startSignUp)
         }
 
-        firebaseAuth = FirebaseAuth.getInstance()
         binding.btnSignin.setOnClickListener{
             val email = binding.emailTxt.text.toString()
             val password = binding.passTxt.text.toString()

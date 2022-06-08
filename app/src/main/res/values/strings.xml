@@ -34,4 +34,7 @@
     <string name="lainnya">Lainnya</string>
     <string name="tulis_kejahatan_disini">Tulis Kejahatan Disini</string>
     <string name="Lokasi">Lokasi :</string>
+    <string name="chatbothint">Kirim Pesan Seperti Hi atau Halo</string>
+    <string name="hati_bot">Hati-Bot</string>
+    <string name="you">Anda</string>
 </resources>

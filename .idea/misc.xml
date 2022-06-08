@@ -3,6 +3,8 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/ha/app/src/main/res/drawable-mdpi/bg_chat_receive.xml" value="0.1035" />
+        <entry key="..\:/ha/app/src/main/res/drawable-mdpi/bg_chat_send.xml" value="0.275" />
         <entry key="..\:/ha/app/src/main/res/drawable/back.xml" value="0.2665" />
         <entry key="..\:/ha/app/src/main/res/drawable/d.xml" value="0.1" />
         <entry key="..\:/ha/app/src/main/res/drawable/ic_baseline_arrow_downward_24.xml" value="0.106" />
@@ -11,13 +13,15 @@
         <entry key="..\:/ha/app/src/main/res/drawable/textbackground.xml" value="0.182" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_add_location.xml" value="0.33" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_add_report.xml" value="0.33" />
-        <entry key="..\:/ha/app/src/main/res/layout/activity_chat.xml" value="0.35104166666666664" />
+        <entry key="..\:/ha/app/src/main/res/layout/activity_chat.xml" value="0.33" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_firebase_mltest.xml" value="0.31979166666666664" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_main.xml" value="0.36666666666666664" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_maps.xml" value="0.33" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_maps2.xml" value="0.2828125" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_sign_in.xml" value="0.25" />
         <entry key="..\:/ha/app/src/main/res/layout/activity_sign_up.xml" value="0.265625" />
+        <entry key="..\:/ha/app/src/main/res/layout/adapter_message_one.xml" value="0.34427083333333336" />
+        <entry key="..\:/ha/app/src/main/res/layout/chatbot_layout.xml" value="0.29980276134122286" />
         <entry key="..\:/ha/app/src/main/res/layout/clicked_marker_layout.xml" value="0.28020833333333334" />
         <entry key="..\:/ha/app/src/main/res/menu/navigation_menu.xml" value="0.31979166666666664" />
       </map>

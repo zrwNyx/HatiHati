@@ -1,5 +1,6 @@
 package com.dicoding.picodiploma.ha.Auth
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -33,9 +34,22 @@ class SignUp : AppCompatActivity() {
             if(password.length >= 6 && name.isNotEmpty() && email.isNotEmpty()) {
                 firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
                     if (it.isSuccessful) {
+                        val user = firebaseAuth.currentUser
                         val ref: DatabaseReference = FirebaseDatabase.getInstance("https://hatihati-22fa9-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("Users")
-                        ref.child(name).setValue(User)
-                        Toast.makeText(applicationContext, "User berhasil ditambahkan", Toast.LENGTH_SHORT).show()
+                        ref.child(user!!.uid).setValue(User)
+
+
+                        user.sendEmailVerification()
+                            .addOnSuccessListener{
+                                firebaseAuth.signOut()
+                                Toast.makeText(applicationContext, "Email Verifikasi telah dikirim",Toast.LENGTH_SHORT).show()
+                                val intent = Intent(this, SignIn::class.java)
+                                startActivity(intent)
+                            }
+                            .addOnFailureListener{
+                                Toast.makeText(applicationContext, "${it.message}",Toast.LENGTH_SHORT).show()
+                            }
+
                     } else {
                         Toast.makeText(applicationContext, it.exception.toString(), Toast.LENGTH_SHORT).show()
                     }

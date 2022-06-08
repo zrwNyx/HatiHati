@@ -2,6 +2,10 @@ package com.dicoding.picodiploma.ha
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -12,6 +16,8 @@ import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -19,8 +25,11 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.dicoding.picodiploma.ha.Auth.SignIn
+import com.dicoding.picodiploma.ha.ChatBot.ChatActivity
 import com.dicoding.picodiploma.ha.Model.Report
 import com.dicoding.picodiploma.ha.databinding.ActivityMapsBinding
 import com.dicoding.picodiploma.ha.test.MapsActivity2
@@ -67,6 +76,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var check = 0
     private lateinit var interpreter: Interpreter
     private val apiKey ="AIzaSyA0L5HH6pok52kuy9NNJZVGM0vKb7VG0Zg"
+    private val CHANNEL_ID  = "channel_id_example_01"
+    private val notificationId =101
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,7 +89,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(applicationContext)
-
+        firebaseAuth = FirebaseAuth.getInstance()
         if(!Places.isInitialized()){
             Places.initialize(applicationContext,apiKey)
         }
@@ -104,8 +115,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
        binding.add.setOnClickListener{
-            val test = Intent(applicationContext, AddReportActivity::class.java)
-            startActivity(test)
+            val user = firebaseAuth.currentUser
+            if(user!!.isEmailVerified) {
+                val test = Intent(applicationContext, ChatActivity::class.java)
+                startActivity(test)
+            }else{
+                Toast.makeText(applicationContext,"Mohon Verifikasi Email Terlebih Dahulu dan Sign in Ulang", Toast.LENGTH_SHORT).show()
+            }
         }
 
 
@@ -114,7 +130,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .addOnSuccessListener {
                 val modelFile = it.file
                 if(modelFile != null){
-                    Toast.makeText(applicationContext,"Model Downloaded", Toast.LENGTH_SHORT).show()
                     interpreter = Interpreter(modelFile)
                 }
             }
@@ -124,10 +139,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        setUpCurrentLocation()
         mMap.uiSettings.isZoomControlsEnabled = true
         supportActionBar?.setDisplayShowHomeEnabled(true)
         supportActionBar?.title = "Hati-Hati"
+
+        setUpCurrentLocation()
 
 
 
@@ -155,6 +171,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
 
+
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater =menuInflater
         inflater.inflate(R.menu.navigation_menu, menu)
@@ -168,7 +186,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 return true
             }
             R.id.logout->{
-                firebaseAuth = FirebaseAuth.getInstance()
                 firebaseAuth.signOut()
                 val logIntent = Intent(this, SignIn::class.java)
                 logIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -185,6 +202,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     //buat munculin marker nya pas diklik ngab
+    @Suppress("DEPRECATION")
     @SuppressLint("SetTextI18n")
     private fun markerClicked(){
         mMap.setOnMapClickListener {
@@ -286,7 +304,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     //pas awal awal munculin lokasi lo skrg
-    private fun setUpCurrentLocation(){
+    private fun setUpCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -306,6 +324,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 lastLocation = it
                 val currentLatLong = LatLng(it.latitude, it.longitude)
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLong,15.0f))
+                createNotification(getLocationName(it.latitude, it.longitude),getPrediction(Calendar.getInstance().time.hours.toFloat(),it.longitude.toFloat(),it.latitude.toFloat()))
             }
         }
     }
@@ -371,6 +390,41 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
+    private fun createNotification(Lokasi : String, Prediksi : Float){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            val name = "Notification Title"
+            val descriptionText = "Notification Description"
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val channel = NotificationChannel(CHANNEL_ID,name,importance).apply {
+                description = descriptionText
+            }
+            val notificationManager : NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+
+        }
+        val intent = Intent(this,MapsActivity::class.java)
+        val pendingIntent : PendingIntent = PendingIntent.getActivity(this,0, intent,0)
+        val dialIntent = Intent(Intent.ACTION_DIAL)
+        dialIntent.setData(Uri.parse("tel:110"))
+        val actionIntent = PendingIntent.getActivity(this, 0 , dialIntent,0)
+
+
+        val builder = NotificationCompat
+            .Builder(this, CHANNEL_ID)
+            .setContentTitle("Anda Sedang Berada di $Lokasi")
+            .setContentText("Kemungkinan Kriminalitas = $Prediksi %")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setSmallIcon(R.drawable.log)
+            .setContentIntent(pendingIntent)
+            .addAction(R.drawable.ic_baseline_arrow_back_24,"Panic Button",actionIntent)
+
+
+        val notification : Notification =  builder.build()
+        notification.flags = Notification.FLAG_ONGOING_EVENT
+        with(NotificationManagerCompat.from(this)){
+            notify(notificationId, notification)
+        }
+    }
 
     companion object{
         private const val REQUEST_LOCATION_CODE = 1
