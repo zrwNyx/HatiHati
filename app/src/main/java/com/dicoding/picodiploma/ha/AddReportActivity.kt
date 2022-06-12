@@ -1,17 +1,16 @@
 package com.dicoding.picodiploma.ha
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import com.dicoding.picodiploma.ha.Model.Report
 import com.dicoding.picodiploma.ha.databinding.ActivityAddReportBinding
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import java.io.IOException
@@ -21,6 +20,7 @@ import java.util.*
 class AddReportActivity : AppCompatActivity() {
     private lateinit var binding : ActivityAddReportBinding
     private lateinit var geocoder : Geocoder
+    private lateinit var firebaseAuth : FirebaseAuth
     var Deskripsi = "null"
     var checkCounter = 0
 
@@ -30,7 +30,8 @@ class AddReportActivity : AppCompatActivity() {
         setContentView(binding.root)
         supportActionBar?.hide()
         binding.otherEditText.visibility = View.INVISIBLE
-        buttonCheck()
+        firebaseAuth = FirebaseAuth.getInstance()
+
 
         val inLatitude = intent.getDoubleExtra("LAT",0.0)
         val inLongitude = intent.getDoubleExtra("LON",0.0)
@@ -41,6 +42,7 @@ class AddReportActivity : AppCompatActivity() {
         }
         val b = getLocationName(inLatitude,inLongitude)
         binding.actualLoc.text = b
+        buttonCheck()
 
     }
 
@@ -97,13 +99,14 @@ class AddReportActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext, "Lengkapi Data", Toast.LENGTH_SHORT).show()
             }
             else{
+                val Reporter = firebaseAuth.currentUser?.email.toString()
                 val Category = Deskripsi
                 val Dates = Calendar.getInstance().time.toString()
                 val Hours = Calendar.getInstance().time.hours
                 val Label = 1
                 val X = inLongitude
                 val Y = inLatitude
-                val Report = Report(Category, Dates, Hours,Label,X,Y)
+                val Report = Report(Reporter,Category, Dates, Hours,Label,X,Y)
                 val ref : DatabaseReference = FirebaseDatabase.getInstance("https://hatihati-22fa9-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("Report")
                 ref.push().setValue(Report).addOnCompleteListener {
                     if(it.isSuccessful){
@@ -125,7 +128,7 @@ class AddReportActivity : AppCompatActivity() {
         geocoder = Geocoder(applicationContext, Locale.getDefault())
         try {
             val addressList : List<Address> = geocoder.getFromLocation(lat,lng,1)
-            if(addressList != null && addressList.isNotEmpty()){
+            if(addressList.isNotEmpty()){
                 val address = addressList.get(0)
                 val sb = StringBuilder()
 

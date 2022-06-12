@@ -1,6 +1,7 @@
 package com.dicoding.picodiploma.ha.Model
 
 data class Report(
+    var Reporter : String = " ",
     var Category : String = " ",
     var Dates : String = " ",
     var Hours : Int = 0,

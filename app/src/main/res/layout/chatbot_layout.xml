@@ -11,7 +11,7 @@
       android:layout_height="wrap_content"
       android:textStyle="bold"
       android:text="@string/you"
-     android:paddingStart="350dp"/>
+      android:paddingStart="330dp"/>
 
   <TextView
       android:id="@+id/send"
@@ -35,6 +35,7 @@
         android:id="@+id/gambar"
         android:layout_width="34dp"
         android:layout_height="34dp"
+        android:contentDescription="@string/gambar"
         android:src="@drawable/log"
         android:scaleType="fitXY"/>
     <TextView

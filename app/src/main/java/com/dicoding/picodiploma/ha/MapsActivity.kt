@@ -8,7 +8,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -32,7 +31,6 @@ import com.dicoding.picodiploma.ha.Auth.SignIn
 import com.dicoding.picodiploma.ha.ChatBot.ChatActivity
 import com.dicoding.picodiploma.ha.Model.Report
 import com.dicoding.picodiploma.ha.databinding.ActivityMapsBinding
-import com.dicoding.picodiploma.ha.test.MapsActivity2
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -66,7 +64,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
-    private lateinit var database : DatabaseReference
+    private lateinit var database : Query
     private lateinit var reportArrayList : ArrayList<Report>
     private lateinit var firebaseAuth : FirebaseAuth
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -75,7 +73,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var geocoder : Geocoder
     private var check = 0
     private lateinit var interpreter: Interpreter
-    private val apiKey ="AIzaSyA0L5HH6pok52kuy9NNJZVGM0vKb7VG0Zg"
+    private val apiKey ="AIzaSyBF-XzsPttrItObpD3l3EzNEzKTjw4hkLw"
     private val CHANNEL_ID  = "channel_id_example_01"
     private val notificationId =101
 
@@ -90,6 +88,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(applicationContext)
         firebaseAuth = FirebaseAuth.getInstance()
+
+
         if(!Places.isInitialized()){
             Places.initialize(applicationContext,apiKey)
         }
@@ -104,12 +104,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             override fun onPlaceSelected(place: Place) {
                 Log.i("Searched Place", "Place: ${place.latLng?.latitude.toString()}  ${place.latLng?.longitude.toString()}")
                 val move = place.latLng
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(move,15.0f))
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(move!!,15.0f))
 
             }
 
             override fun onError(p0: Status) {
-                Log.i("Error", "An error occured : + ${p0.status}")
+                Log.i("Error", "An error occured :  ${p0.status}")
             }
         })
 
@@ -125,14 +125,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
 
-        val conditions = CustomModelDownloadConditions.Builder().build()
-        FirebaseModelDownloader.getInstance().getModel("Prediction", DownloadType.LOCAL_MODEL,conditions)
-            .addOnSuccessListener {
-                val modelFile = it.file
-                if(modelFile != null){
-                    interpreter = Interpreter(modelFile)
-                }
-            }
+
 
     }
 
@@ -143,12 +136,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         supportActionBar?.setDisplayShowHomeEnabled(true)
         supportActionBar?.title = "Hati-Hati"
 
-        setUpCurrentLocation()
+
+        val conditions = CustomModelDownloadConditions.Builder().build()
+        FirebaseModelDownloader.getInstance().getModel("Prediction", DownloadType.LOCAL_MODEL,conditions)
+            .addOnSuccessListener {
+                val modelFile = it.file
+                if(modelFile != null){
+                    interpreter = Interpreter(modelFile)
+                    setUpCurrentLocation()
+                }
+            }
 
 
 
 
-        database = FirebaseDatabase.getInstance("https://hatihati-22fa9-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("Report")
+
+        database = FirebaseDatabase.getInstance("https://hatihati-22fa9-default-rtdb.asia-southeast1.firebasedatabase.app").getReference().child("Report").limitToLast(200)
         reportArrayList = arrayListOf<Report>()
 
         database.addValueEventListener(object : ValueEventListener{
@@ -173,7 +176,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater =menuInflater
         inflater.inflate(R.menu.navigation_menu, menu)
         return true
@@ -181,10 +184,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
-            R.id.settings ->{
-                Toast.makeText(applicationContext,"Clicked", Toast.LENGTH_SHORT).show()
-                return true
-            }
             R.id.logout->{
                 firebaseAuth.signOut()
                 val logIntent = Intent(this, SignIn::class.java)
@@ -218,7 +217,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             binding.rectText.text = "\n" +
                     "     Lokasi : $Lokasi   \n" +
                     "     Jam : $currentTime  \n" +
-                    "     Prediksi : $prediksi % \n"
+                    "     Kemungkinan Kriminalitas : $prediksi % \n"
             if(check == 0){
                 Toast.makeText(applicationContext,"Tidak ada Data di Area Sekitar",Toast.LENGTH_SHORT).show()
             }
@@ -313,7 +312,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 REQUEST_LOCATION_CODE
             )
             return
@@ -335,7 +334,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         geocoder = Geocoder(applicationContext, Locale.getDefault())
         try {
             val addressList : List<Address> = geocoder.getFromLocation(lat,lng,1)
-            if(addressList != null && addressList.isNotEmpty()){
+            if(addressList.isNotEmpty()){
                 val address = addressList.get(0)
                 val sb = StringBuilder()
 
@@ -361,15 +360,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun BitmapDescriptorFromVector(context : Context, vectorResId : Int) : BitmapDescriptor{
         val vectorDrawable = ContextCompat.getDrawable(context,vectorResId)
         vectorDrawable?.setBounds(0,0,vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight)
-        val bitmap = Bitmap.createBitmap(vectorDrawable!!.intrinsicWidth,vectorDrawable!!.intrinsicHeight,Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(vectorDrawable!!.intrinsicWidth,vectorDrawable.intrinsicHeight,Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        vectorDrawable!!.draw(canvas)
+        vectorDrawable.draw(canvas)
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
     private fun getPrediction(Jam : Float , Lon: Float, Lat: Float) : Float{
 
-        var predict = 0.0f
+        val predict: Float
         val input = ByteBuffer.allocateDirect(3*4).order(ByteOrder.nativeOrder())
         input.putFloat(Jam)
         input.putFloat(Lon)
@@ -403,10 +402,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         }
         val intent = Intent(this,MapsActivity::class.java)
-        val pendingIntent : PendingIntent = PendingIntent.getActivity(this,0, intent,0)
+        val pendingIntent : PendingIntent = PendingIntent.getActivity(this,0, intent,PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT )
         val dialIntent = Intent(Intent.ACTION_DIAL)
         dialIntent.setData(Uri.parse("tel:110"))
-        val actionIntent = PendingIntent.getActivity(this, 0 , dialIntent,0)
+        val actionIntent = PendingIntent.getActivity(this, 0 , dialIntent,PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT )
 
 
         val builder = NotificationCompat

@@ -40,7 +40,6 @@ class BotAdapter(private var activity: Activity, private var messageList: List<M
             if(message.contains("bersedia")){
                 val intent = Intent(holder.itemView.context , AddReportActivity::class.java )
                 activity.startActivity(intent)
-                activity.finish()
             }else{
                 //DO NOTHING
             }

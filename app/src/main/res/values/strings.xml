@@ -37,4 +37,8 @@
     <string name="chatbothint">Kirim Pesan Seperti Hi atau Halo</string>
     <string name="hati_bot">Hati-Bot</string>
     <string name="you">Anda</string>
+    <string name="gambar">gambar</string>
+    <string name="nama">Nama</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
 </resources>
