@@ -57,6 +57,7 @@ import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -151,7 +152,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
 
-        database = FirebaseDatabase.getInstance("https://hatihati-22fa9-default-rtdb.asia-southeast1.firebasedatabase.app").getReference().child("Report").limitToLast(200)
+        database = FirebaseDatabase.getInstance("https://hatihati-22fa9-default-rtdb.asia-southeast1.firebasedatabase.app").getReference().child("Report").limitToLast(400)
         reportArrayList = arrayListOf<Report>()
 
         database.addValueEventListener(object : ValueEventListener{
@@ -381,7 +382,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         interpreter.run(input,modelOutput)
         modelOutput.rewind()
         val b = actualOutput.get(1)*100
-        val df = DecimalFormat("#.##")
+        val df = DecimalFormat("#,##", DecimalFormatSymbols.getInstance(Locale.US))
         df.roundingMode = RoundingMode.DOWN
         predict = df.format(b).toFloat()
 
